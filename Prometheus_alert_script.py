@@ -15,7 +15,7 @@ def http_request(alert_name, prometheusIp, judge_prome_sql, source_prome_sql, wa
         try:
             response = requests.get('http://%s/api/v1/query' % i, params={'query': judge_prome_sql})
             if response.json()["data"]['result'] != []:
-                response = requests.get('http://10.246.51.221:9090/api/v1/query', params={'query': source_prome_sql})
+                response = requests.get('http://%s/api/v1/query' % i, params={'query': source_prome_sql})
                 value = 0 if response.json()["data"]['result'] == [] else 1
                 print("metric=%s|value=%s|type=gauge|tags=status:%s" % (alert_name, value, warning_level))
         except:
