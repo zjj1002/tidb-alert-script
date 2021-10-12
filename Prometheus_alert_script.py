@@ -32,56 +32,56 @@ alert_name = 'TiDB.blacker.Tidb_server_is_down'
 warning_level = 'critical'
 judge_prome_sql = 'probe_success{group="tidb",instance=~"%s.*"}' % ip
 source_prome_sql = 'probe_success{group="tidb",instance=~"%s.*"} == 0' % ip
-http_request(alert_name, judge_prome_sql, source_prome_sql, warning_level)
+http_request(alert_name, prometheus_ips, judge_prome_sql, source_prome_sql, warning_level)
 
 # TiKV server is down
 alert_name = 'TiDB.blacker.Tikv_server_is_down'
 warning_level = 'critical'
 judge_prome_sql = 'probe_success{group="tikv",instance=~"%s.*"}' % ip
 source_prome_sql = 'probe_success{group="tikv",instance=~"%s.*"} == 0' % ip
-http_request(alert_name, judge_prome_sql, source_prome_sql, warning_level)
+http_request(alert_name, prometheus_ips, judge_prome_sql, source_prome_sql, warning_level)
 
 # TiFlash server is down
 alert_name = 'TiDB.blacker.Tiflash_server_is_down'
 warning_level = 'critical'
 judgeprome_sql = 'probe_success{group="tiflash",instance=~"%s.*"}' % ip
 source_prome_sql = 'probe_success{group="tiflash",instance=~"%s.*"} == 0' % ip
-http_request(alert_name, judge_prome_sql, source_prome_sql, warning_level)
+http_request(alert_name, prometheus_ips, judge_prome_sql, source_prome_sql, warning_level)
 
 # PD server is down
 alert_name = 'TiDB.blacker.pd_server_is_down'
 warning_level = 'critical'
 judge_prome_sql = 'probe_success{group="pd",instance=~"%s.*"}' % ip
 source_prome_sql = 'probe_success{group="pd",instance=~"%s.*"} == 0' % ip
-http_request(alert_name, judge_prome_sql, source_prome_sql, warning_level)
+http_request(alert_name, prometheus_ips, judge_prome_sql, source_prome_sql, warning_level)
 
 # PD restart
 alert_name = 'TiDB.pd.PD_node_restart'
 warning_level = 'critical'
 judge_prome_sql = 'changes(process_start_time_seconds{job="pd",instance=~"%s.*"}[5m])' % ip
 source_prome_sql = 'changes(process_start_time_seconds{job="pd",instance=~"%s.*"}[5m])> 0' % ip
-http_request(alert_name, judge_prome_sql, source_prome_sql, warning_level)
+http_request(alert_name, prometheus_ips, judge_prome_sql, source_prome_sql, warning_level)
 
 # TiKV restart
 alert_name = 'TiDB.tikv.TIKV_node_restart'
 warning_level = 'critical'
 judge_prome_sql = 'changes(process_start_time_seconds{job="tikv",instance=~"%s.*"}[5m])' % ip
 source_prome_sql = 'changes(process_start_time_seconds{job="tikv",instance=~"%s.*"}[5m])> 0' % ip
-http_request(alert_name, judge_prome_sql, source_prome_sql, warning_level)
+http_request(alert_name, prometheus_ips, judge_prome_sql, source_prome_sql, warning_level)
 
 # TiDB restart
 alert_name = 'TiDB.tidb.TIDB_node_restart'
 warning_level = 'critical'
 judge_prome_sql = 'changes(process_start_time_seconds{job="tidb",instance=~"%s.*"}[5m])' % ip
 source_prome_sql = 'changes(process_start_time_seconds{job="tidb",instance=~"%s.*"}[5m])> 0' % ip
-http_request(alert_name, judge_prome_sql, source_prome_sql, warning_level)
+http_request(alert_name, prometheus_ips, judge_prome_sql, source_prome_sql, warning_level)
 
 # TiFlash restart
 alert_name = 'TiDB.tiflash.TiFlash_proxy_node_restart'
 warning_level = 'critical'
 judge_prome_sql = 'changes(process_start_time_seconds{job="tiflash",instance=~"%s.*"}[5m])' % ip
 source_prome_sql = 'changes(process_start_time_seconds{job="tiflash",instance=~"%s.*"}[5m])> 0' % ip
-http_request(alert_name, judge_prome_sql, source_prome_sql, warning_level)
+http_request(alert_name, prometheus_ips, judge_prome_sql, source_prome_sql, warning_level)
 
 # TiKV GC not working
 alert_name = 'TiDB.tikv.TiKV_GC_can_not_work'
@@ -89,4 +89,4 @@ warning_level = 'critical'
 judge_prome_sql = 'increase(tikv_gcworker_gc_tasks_vec{task="gc",instance=~"%s.*"}[1d])' % ip
 source_prome_sql = 'increase(tikv_gcworker_gc_tasks_vec{task="gc",instance=~"%s.*"}[1d]) < 1 and increase(tikv_gc_compaction_filter_perform{instance=~"%s.*"}[1d]) < 1' % (
     ip, ip)
-http_request(alert_name, judge_prome_sql, source_prome_sql, warning_level)
+http_request(alert_name, prometheus_ips, judge_prome_sql, source_prome_sql, warning_level)
