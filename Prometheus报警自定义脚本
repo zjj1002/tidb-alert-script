@@ -1,0 +1,121 @@
+import argparse
+import requests
+import sys
+import socket
+def getOptions():
+        parser = argparse.ArgumentParser(description="Parses command.")
+        parser.add_argument("-i","--input",help="put your prometheus ip and port in the first arg and looks like 10.0.0.1:8989,10.0.0.2:9000 ")
+        options = parser.parse_args()
+        return options
+
+def splitIp(options):
+        count = len(options.input.split(","))
+        prometheusIp = options.input.split(",")
+        return  count,prometheusIp
+
+
+def httpRequest(alert_name,prometheusIp,judge_prome_sql,source_prome_sql,warning_level):
+        for i in prometheusIp:
+                print('http://%s/api/v1/query' % i)
+                try:
+                        response = requests.get('http://%s/api/v1/query' % i,params={'query': judge_prome_sql})
+                        if response.json()["data"]['result'] != []:
+                                response = requests.get('http://10.246.51.221:9090/api/v1/query',params={'query': source_prome_sql})
+                                value = 0 if response.json()["data"]['result'] == [] else 1
+                                print("metric=%s|value=%s|type=gauge|tags=status:%s"% (alert_name,value,warning_level))
+                except:
+                        continue
+
+
+options = getOptions()
+count,prometheusIp = splitIp(options)
+print(prometheusIp,count)
+hostname = socket.gethostname()
+ip = socket.gethostbyname(hostname)
+
+
+
+alert_name = TiDB.blacker.Tidb_server_is_down
+warning_level = critical
+judge_prome_sql = 'probe_success{group="tidb",instance=~"%s.*"}' % ip
+source_prome_sql = 'probe_success{group="tidb",instance=~"%s.*"} == 0' % ip
+httpRequest = (alert_name,judege_prome_sql,source_prome_sql,waring_level)
+
+
+alert_name = TiDB.blacker.Tikv_server_is_down
+warning_level = critical
+judgeprome_sql = 'probe_success{group="tikv",instance=~"%s.*"}' % ip
+source_prome_sql = 'probe_success{group="tikv",instance=~"%s.*"} == 0' % ip
+httpRequest = (alert_name,judege_prome_sql,source_prome_sql,waring_level)
+
+
+
+#Tiflash_server_is_down
+prome_sql = 'probe_success{group="tiflash",instance=~"%s.*"}' % ip
+response = requests.get('http://10.246.51.221:9090/api/v1/query',params={'query': prome_sql})
+if response.json()["data"]['result'] != []:
+        prome_sql = 'probe_success{group="tiflash",instance=~"%s.*"} == 0' % ip
+        response = requests.get('http://10.246.51.221:9090/api/v1/query',params={'query': prome_sql})
+        value = 0 if response.json()["data"]['result'] == [] else 1
+        print("metric=TiDB.blacker.Tiflash_server_is_down|value=%s|type=gauge|tags=status:warning"% value)
+
+
+#PD_server_is_down
+prome_sql = 'probe_success{group="pd",instance=~"%s.*"}' % ip
+response = requests.get('http://10.246.51.221:9090/api/v1/query',params={'query': prome_sql})
+if response.json()["data"]['result'] != []:
+        prome_sql = 'probe_success{group="pd",instance=~"%s.*"} == 0' % ip
+        response = requests.get('http://10.246.51.221:9090/api/v1/query',params={'query': prome_sql})
+        value = 0 if response.json()["data"]['result'] == [] else 1
+        print("metric=TiDB.blacker.pd_server_is_down|value=%s|type=gauge|tags=status:warning"% value)
+
+
+#PD_node_restart
+prome_sql = 'changes(process_start_time_seconds{job="pd",instance=~"%s.*"}[5m])' % ip
+response = requests.get('http://10.246.51.221:9090/api/v1/query',params={'query': prome_sql})
+if response.json()["data"]['result'] != []:
+        prome_sql = 'changes(process_start_time_seconds{job="pd",instance=~"%s.*"}[5m])> 0' % ip
+        response = requests.get('http://10.246.51.221:9090/api/v1/query',params={'query': prome_sql})
+        value = 0 if response.json()["data"]['result'] == [] else 1
+        print("metric=TiDB.pd.PD_node_restart|value=%s|type=gauge|tags=status:warning"% value)
+
+
+
+#TIKV_node_restart
+prome_sql = 'changes(process_start_time_seconds{job="tikv",instance=~"%s.*"}[5m])' % ip
+response = requests.get('http://10.246.51.221:9090/api/v1/query',params={'query': prome_sql})
+if response.json()["data"]['result'] != []:
+        prome_sql = 'changes(process_start_time_seconds{job="tikv",instance=~"%s.*"}[5m])> 0' % ip
+        response = requests.get('http://10.246.51.221:9090/api/v1/query',params={'query': prome_sql})
+        value = 0 if response.json()["data"]['result'] == [] else 1
+        print("metric=TiDB.tikv.TIKV_node_restart|value=%s|type=gauge|tags=status:warning"% value)
+
+#TIDB_node_restart
+prome_sql = 'changes(process_start_time_seconds{job="tidb",instance=~"%s.*"}[5m])' % ip
+response = requests.get('http://10.246.51.221:9090/api/v1/query',params={'query': prome_sql})
+if response.json()["data"]['result'] != []:
+        prome_sql = 'changes(process_start_time_seconds{job="tidb",instance=~"%s.*"}[5m])> 0' % ip
+        response = requests.get('http://10.246.51.221:9090/api/v1/query',params={'query': prome_sql})
+        value = 0 if response.json()["data"]['result'] == [] else 1
+        print("metric=TiDB.tidb.TIDB_node_restart|value=%s|type=gauge|tags=status:warning"% value)
+
+
+#TIFLASH_node_restart
+prome_sql = 'changes(tiflash_proxy_process_start_time_seconds{job="tiflash",instance=~"%s.*"}[5m])' % ip
+response = requests.get('http://10.246.51.221:9090/api/v1/query',params={'query': prome_sql})
+if response.json()["data"]['result'] != []:
+        prome_sql = 'changes(tiflash_proxy_process_start_time_seconds{job="tiflash",instance=~"%s.*"}[5m]) > 0' % ip
+        response = requests.get('http://10.246.51.221:9090/api/v1/query',params={'query': prome_sql})
+        value = 0 if response.json()["data"]['result'] == [] else 1
+        print("metric=TiDB.tiflash.TiFlash_proxy_node_restart|value=%s|type=gauge|tags=status:warning"% value)
+
+
+
+#TiKV_GC_can_not_work
+prome_sql = 'increase(tikv_gcworker_gc_tasks_vec{task="gc",instance=~"%s.*"}[1d])' % ip
+response = requests.get('http://10.246.51.221:9090/api/v1/query',params={'query': prome_sql})
+if response.json()["data"]['result'] != []:
+        prome_sql = 'increase(tikv_gcworker_gc_tasks_vec{task="gc",instance=~"%s.*"}[1d]) < 1 and increase(tikv_gc_compaction_filter_perform{instance=~"%s.*"}[1d]) < 1' % (ip,ip)
+        response = requests.get('http://10.246.51.221:9090/api/v1/query',params={'query': prome_sql})
+        value = 0 if response.json()["data"]['result'] == [] else 1
+        print("metric=TiDB.tikv.TiKV_GC_can_not_work|value=%s|type=gauge|tags=status:warning"% value)
