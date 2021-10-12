@@ -3,9 +3,9 @@ import sys
 import socket
 
 
-def split_ip(options):
-    number_of_ip = len(options.input.split(","))
-    prometheus_ip = options.input.split(",")
+def split_ip(ips):
+    number_of_ip = len(ips.split(","))
+    prometheus_ip = ips.split(",")
     return number_of_ip, prometheus_ip
 
 
