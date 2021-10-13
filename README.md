@@ -4,7 +4,7 @@
 - 使用者可以把解析后的消息 用 命名行 | http接口方式 把这个报警用自己的方式发出去
 - 脚本里展示了一个用命令行而且自定义发送格式的例子
 
-prometheus_alert_script.py解决的问题
+# prometheus_alert_script.py解决的问题
 * 因为某个客户的监控系统不支持PROMSQL，并且不支持string方式的报警方式
 * 而且客户部署了两个Prometheus，进行HA
 * 客户的报警方式是 在每台机器上都有一个agent，只能监控本机的情况 ，所以本脚本的逻辑是 通过在每台机器上 访问本地的Prometheus来处理promsql，然后把结果用0和1发给客户系统即可
