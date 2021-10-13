@@ -106,6 +106,14 @@ Grafana_metrics = {
     },
 }
 
+# Prometheus
+Prometheus_metrics = {
+    'TiDB.prometheus.Prometheus_is_down': {
+        'warning_level': 'critical',
+        'pql': 'probe_success{}',
+    }
+}
+
 """
 --------------------------------------------------------------------------
 functions to be used by script
@@ -231,12 +239,17 @@ note that self ip is obtained at the beginning of the script
 count, prometheus_ips = split_prome_ips(sys.argv[1])
 print(prometheus_ips, count)
 
+for prometheus_ip in prometheus_ips:
+    if self_ip == prometheus_ip.split(':')[0]:
+        if not check_prome_alive(prometheus_ip):
+            print("metric=TiDB.prometheus.Prometheus_is_down|value=1|type=gauge|tags=status:critical")
+        else:
+            print("metric=TiDB.prometheus.Prometheus_is_down|value=0|type=gauge|tags=status:critical")
+
 prometheus_ip = find_alive_prome(prometheus_ips)
 
 # check if all prometheus are down
 if not prometheus_ip:
-    if self_ip in [ip.split(':')[0] for ip in prometheus_ips]:
-        print("metric=TiDB.prometheus.Prometheus_is_down|value=1|type=gauge|tags=status:critical")
     sys.exit()
 
 tasks = populate_tasks(prometheus_ip)
