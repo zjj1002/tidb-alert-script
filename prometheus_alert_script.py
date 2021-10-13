@@ -93,7 +93,16 @@ Blacker_metrics = {
 Node_exporter_metrics = {
     'TiDB.blacker.Node_exporter_server_is_down': {
         'warning_level': 'critical',
-        'pql': 'probe_success{group="Node_exporter",instance=~"%s.*"} == 0' % self_ip
+        'pql': 'probe_success{group="node_exporter",instance=~"%s.*"} == 0' % self_ip
+    },
+}
+
+# Grafana
+# Alert rules under the Grafana node
+Grafana_metrics = {
+    'TiDB.blacker.Grafana_server_is_down': {
+        'warning_level': 'critical',
+        'pql': 'probe_success{group="grafana",instance=~"%s.*"} == 0' % self_ip
     },
 }
 
@@ -114,7 +123,6 @@ def split_prome_ips(ips):
 # send given prometheus query to target prometheus
 # return the http response
 def request_prome(prome_ip, query):
-    print('http://%s/api/v1/query' % prome_ip)
     return requests.get('http://%s/api/v1/query' % prome_ip, params={'query': query})
 
 
@@ -148,6 +156,9 @@ def populate_tasks(prometheus_ip):
         'tikv': 'probe_success{group="tikv",instance=~"%s.*"}' % self_ip,
         'tiflash': 'probe_success{group="tiflash",instance=~"%s.*"}' % self_ip,
         'pd': 'probe_success{group="pd",instance=~"%s.*"}' % self_ip,
+        'node_exporter': 'probe_success{group="node_exporter",instance=~"%s.*"}' % self_ip,
+        'blackbox_exporter': 'probe_success{group="blackbox_exporter",instance=~"%s.*"}' % self_ip,
+        'grafana': 'probe_success{group="grafana",instance=~"%s.*"}' % self_ip,
     }
 
     return_tasks = []
@@ -164,8 +175,14 @@ def populate_tasks(prometheus_ip):
     if has_response(prometheus_ip, judge_pqls['pd']):
         return_tasks.append(PD_metrics)
 
-    return_tasks.append(Blacker_metrics)
-    return_tasks.append(Node_exporter_metrics)
+    if has_response(prometheus_ip, judge_pqls['blackbox_exporter']):
+        return_tasks.append(Blacker_metrics)
+
+    if has_response(prometheus_ip, judge_pqls['node_exporter']):
+        return_tasks.append(Node_exporter_metrics)
+
+    if has_response(prometheus_ip, judge_pqls['grafana']):
+        return_tasks.append(Grafana_metrics)
 
     return return_tasks
 
@@ -182,7 +199,6 @@ def find_alive_prome(prome_ips):
 # check metric and print out warning by send out pql to the given prometheus
 def check_metric(alert_name, prometheus_ip, pql, warning_level):
     try:
-        print('http://%s/api/v1/query' % prometheus_ip)
         response = request_prome(prometheus_ip, pql)
         value = 0 if response.json()["data"]['result'] == [] else 1
         print("metric=%s|value=%s|type=gauge|tags=status:%s" % (alert_name, value, warning_level))
@@ -212,7 +228,8 @@ prometheus_ip = find_alive_prome(prometheus_ips)
 
 # check if all prometheus are down
 if not prometheus_ip:
-    print("metric=TiDB.prometheus.Prometheus_is_down|value=1|type=gauge|tags=status:critical")
+    if self_ip in prometheus_ips:
+        print("metric=TiDB.prometheus.Prometheus_is_down|value=1|type=gauge|tags=status:critical")
     sys.exit()
 
 tasks = populate_tasks(prometheus_ip)
