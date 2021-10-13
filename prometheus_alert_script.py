@@ -235,7 +235,7 @@ prometheus_ip = find_alive_prome(prometheus_ips)
 
 # check if all prometheus are down
 if not prometheus_ip:
-    if self_ip in prometheus_ips:
+    if self_ip in [ip.split(':')[0] for ip in prometheus_ips]:
         print("metric=TiDB.prometheus.Prometheus_is_down|value=1|type=gauge|tags=status:critical")
     sys.exit()
 
