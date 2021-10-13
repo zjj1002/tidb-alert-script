@@ -9,11 +9,19 @@ def get_ip():
     return socket.gethostbyname(hostname)
 
 
+# This should be the only global variable
 self_ip = get_ip()
 
-# here defines the target metrics we wanna check for each role
-# role metrics are define as follow:
-# each key is the alert name, and value associated with the given key is a dictionary of warning level and pql
+"""
+--------------------------------------------------------------------------
+target metrics for each role
+role metrics are define as follow:
+    each key is the alert name
+    value associated with the given key is a dictionary of warning level and pql
+
+Modify this block to add more metrics to monitor
+--------------------------------------------------------------------------
+"""
 
 # PD
 # Alert rules under the PD Node
@@ -86,28 +94,57 @@ Blacker_metrics = {
 Node_exporter_metrics = {
     'TiDB.blacker.Node_exporter_server_is_down': {
         'warning_level': 'critical',
-        'pql': 'probe_success{group="Node_exporter",instance=~"%s.*"} == 0' % self_ip
+        'pql': 'probe_success{group="node_exporter",instance=~"%s.*"} == 0' % self_ip
     },
 }
 
+# Grafana
+# Alert rules under the Grafana node
+Grafana_metrics = {
+    'TiDB.blacker.Grafana_server_is_down': {
+        'warning_level': 'critical',
+        'pql': 'probe_success{group="grafana",instance=~"%s.*"} == 0' % self_ip
+    },
+}
 
-# split the input prometheus ip by ","
-def split_prome_ips(ips):
-    number_of_ip = len(ips.split(","))
-    prometheus_ip = ips.split(",")
-    return number_of_ip, prometheus_ip
+# Prometheus
+Prometheus_metrics = {
+    'TiDB.prometheus.Prometheus_is_down': {
+        'warning_level': 'critical',
+        'pql': 'probe_success{}',
+    }
+}
+
+"""
+--------------------------------------------------------------------------
+functions to be used by script
+--------------------------------------------------------------------------
+"""
+
+
+# split the input prometheus addresses by ","
+def split_prome_addresses(addresses):
+    number_of_addresses = len(addresses.split(","))
+    prometheus_addresses = addresses.split(",")
+    return number_of_addresses, prometheus_addresses
 
 
 # send given prometheus query to target prometheus
 # return the http response
-def request_prome(prome_ip, query):
-    print('http://%s/api/v1/query' % prome_ip)
-    return requests.get('http://%s/api/v1/query' % prome_ip, params={'query': query})
+# return none if failed to get response
+def request_prome(prometheus_address, query):
+    try:
+        response = requests.get('http://%s/api/v1/query' % prometheus_address, params={'query': query})
+        return response
+    except:
+        return None
 
 
 # check if sending the given query to target prometheus will return result
-def has_response(prome_ip, query):
-    response = request_prome(prome_ip, query)
+def has_response(prometheus_address, query):
+    response = request_prome(prometheus_address, query)
+    if not response:
+        return False
     try:
         if response.json()["data"]['result']:
             return True
@@ -119,15 +156,15 @@ def has_response(prome_ip, query):
 
 # check if the given prometheus is alive
 # returns true if target is alive, false otherwise
-def check_prome_alive(prome_ip):
+def check_prome_alive(prometheus_address):
     # dummy query is used to judge if prometheus is alive
     dummy_query = 'probe_success{}'
-    return has_response(prome_ip, dummy_query)
+    return has_response(prometheus_address, dummy_query)
 
 
 # check_role populate role dictionary to see if it has current role
 # must be sure that given prometheus is alive
-def populate_tasks(prometheus_ip):
+def populate_tasks(prometheus_address):
     # pqls to check role
     # note that key must be same as roles dictionary
     judge_pqls = {
@@ -135,42 +172,50 @@ def populate_tasks(prometheus_ip):
         'tikv': 'probe_success{group="tikv",instance=~"%s.*"}' % self_ip,
         'tiflash': 'probe_success{group="tiflash",instance=~"%s.*"}' % self_ip,
         'pd': 'probe_success{group="pd",instance=~"%s.*"}' % self_ip,
+        'node_exporter': 'probe_success{group="node_exporter",instance=~"%s.*"}' % self_ip,
+        'blackbox_exporter': 'probe_success{group="blackbox_exporter",instance=~"%s.*"}' % self_ip,
+        'grafana': 'probe_success{group="grafana",instance=~"%s.*"}' % self_ip,
     }
 
-    tasks = []
+    return_tasks = []
 
-    if has_response(prometheus_ip, judge_pqls['tidb']):
-        tasks.append(TiDB_metrics)
+    if has_response(prometheus_address, judge_pqls['tidb']):
+        return_tasks.append(TiDB_metrics)
 
-    if has_response(prometheus_ip, judge_pqls['tikv']):
-        tasks.append(TiKV_metrics)
+    if has_response(prometheus_address, judge_pqls['tikv']):
+        return_tasks.append(TiKV_metrics)
 
-    if has_response(prometheus_ip, judge_pqls['tiflash']):
-        tasks.append(TiFlash_metrics)
+    if has_response(prometheus_address, judge_pqls['tiflash']):
+        return_tasks.append(TiFlash_metrics)
 
-    if has_response(prometheus_ip, judge_pqls['pd']):
-        tasks.append(PD_metrics)
+    if has_response(prometheus_address, judge_pqls['pd']):
+        return_tasks.append(PD_metrics)
 
-    tasks.append(Blacker_metrics)
-    tasks.append(Node_exporter_metrics)
+    if has_response(prometheus_address, judge_pqls['blackbox_exporter']):
+        return_tasks.append(Blacker_metrics)
 
-    return tasks
+    if has_response(prometheus_address, judge_pqls['node_exporter']):
+        return_tasks.append(Node_exporter_metrics)
+
+    if has_response(prometheus_address, judge_pqls['grafana']):
+        return_tasks.append(Grafana_metrics)
+
+    return return_tasks
 
 
 # return the first alive prometheus ip from the ip list
 # return None if no prometheus is alive
-def find_alive_prome(prome_ips):
-    for prome_ip in prome_ips:
-        if check_prome_alive(prome_ip):
-            return prome_ip
+def find_alive_prome(prometheus_addresses):
+    for prometheus_address in prometheus_addresses:
+        if check_prome_alive(prometheus_address):
+            return prometheus_address
     return None
 
 
 # check metric and print out warning by send out pql to the given prometheus
-def check_metric(alert_name, prometheus_ip, pql, warning_level):
+def check_metric(alert_name, prometheus_address, pql, warning_level):
     try:
-        print('http://%s/api/v1/query' % prometheus_ip)
-        response = request_prome(prometheus_ip, pql)
+        response = request_prome(prometheus_address, pql)
         value = 0 if response.json()["data"]['result'] == [] else 1
         print("metric=%s|value=%s|type=gauge|tags=status:%s" % (alert_name, value, warning_level))
     except:
@@ -178,23 +223,41 @@ def check_metric(alert_name, prometheus_ip, pql, warning_level):
 
 
 # check all metrics defined in a role dictionary
-def check_role_metrics(role_metrics, prometheus_ip):
+def check_role_metrics(role_metrics, prometheus_address):
     for alert in role_metrics:
         pql = role_metrics[alert]['pql']
         warning_level = role_metrics[alert]['warning_level']
-        check_metric(alert, prometheus_ip, pql, warning_level)
+        check_metric(alert, prometheus_address, pql, warning_level)
 
 
-# ----------------------------------script starts here------------------------------------
-count, prometheus_ips = split_prome_ips(sys.argv[1])
-print(prometheus_ips, count)
+"""
+--------------------------------------------------------------------------
+script starts here
+note that self ip is obtained at the beginning of the script
+--------------------------------------------------------------------------
+"""
 
-prometheus_ip = find_alive_prome(prometheus_ips)
-# check if all prometheus are down
-if not prometheus_ip:
-    print("metric=TiDB.prometheus.Prometheus_is_down|value=1|type=gauge|tags=status:critical")
-    sys.exit()
 
-tasks = populate_tasks(prometheus_ip)
-for task in tasks:
-    check_role_metrics(task, prometheus_ip)
+def run_script():
+    count, prometheus_addresses = split_prome_addresses(sys.argv[1])
+    print(prometheus_addresses, count)
+
+    for prometheus_address in prometheus_addresses:
+        if self_ip == prometheus_address.split(':')[0]:
+            if not check_prome_alive(prometheus_address):
+                print("metric=TiDB.prometheus.Prometheus_is_down|value=1|type=gauge|tags=status:critical")
+            else:
+                print("metric=TiDB.prometheus.Prometheus_is_down|value=0|type=gauge|tags=status:critical")
+
+    active_prometheus_address = find_alive_prome(prometheus_addresses)
+
+    # check if all prometheus are down
+    if not active_prometheus_address:
+        sys.exit()
+
+    tasks = populate_tasks(active_prometheus_address)
+    for task in tasks:
+        check_role_metrics(task, active_prometheus_address)
+
+
+run_script()
