@@ -122,13 +122,20 @@ def split_prome_ips(ips):
 
 # send given prometheus query to target prometheus
 # return the http response
+# return none if failed to get response
 def request_prome(prome_ip, query):
-    return requests.get('http://%s/api/v1/query' % prome_ip, params={'query': query})
+    try:
+        response = requests.get('http://%s/api/v1/query' % prome_ip, params={'query': query})
+        return response
+    except:
+        return None
 
 
 # check if sending the given query to target prometheus will return result
 def has_response(prome_ip, query):
     response = request_prome(prome_ip, query)
+    if not response:
+        return False
     try:
         if response.json()["data"]['result']:
             return True
