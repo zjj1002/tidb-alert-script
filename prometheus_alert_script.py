@@ -11,9 +11,16 @@ def get_ip():
 
 self_ip = get_ip()
 
-# here defines the target metrics we wanna check for each role
-# role metrics are define as follow:
-# each key is the alert name, and value associated with the given key is a dictionary of warning level and pql
+"""
+--------------------------------------------------------------------------
+target metrics for each role
+role metrics are define as follow:
+    each key is the alert name
+    value associated with the given key is a dictionary of warning level and pql
+
+Modify this block to add more metrics to monitor
+--------------------------------------------------------------------------
+"""
 
 # PD
 # Alert rules under the PD Node
@@ -90,6 +97,12 @@ Node_exporter_metrics = {
     },
 }
 
+"""
+--------------------------------------------------------------------------
+functions to be used by script
+--------------------------------------------------------------------------
+"""
+
 
 # split the input prometheus ip by ","
 def split_prome_ips(ips):
@@ -137,24 +150,24 @@ def populate_tasks(prometheus_ip):
         'pd': 'probe_success{group="pd",instance=~"%s.*"}' % self_ip,
     }
 
-    tasks = []
+    return_tasks = []
 
     if has_response(prometheus_ip, judge_pqls['tidb']):
-        tasks.append(TiDB_metrics)
+        return_tasks.append(TiDB_metrics)
 
     if has_response(prometheus_ip, judge_pqls['tikv']):
-        tasks.append(TiKV_metrics)
+        return_tasks.append(TiKV_metrics)
 
     if has_response(prometheus_ip, judge_pqls['tiflash']):
-        tasks.append(TiFlash_metrics)
+        return_tasks.append(TiFlash_metrics)
 
     if has_response(prometheus_ip, judge_pqls['pd']):
-        tasks.append(PD_metrics)
+        return_tasks.append(PD_metrics)
 
-    tasks.append(Blacker_metrics)
-    tasks.append(Node_exporter_metrics)
+    return_tasks.append(Blacker_metrics)
+    return_tasks.append(Node_exporter_metrics)
 
-    return tasks
+    return return_tasks
 
 
 # return the first alive prometheus ip from the ip list
@@ -185,11 +198,18 @@ def check_role_metrics(role_metrics, prometheus_ip):
         check_metric(alert, prometheus_ip, pql, warning_level)
 
 
-# ----------------------------------script starts here------------------------------------
+"""
+--------------------------------------------------------------------------
+script starts here
+note that self ip is obtained at the beginning of the script
+--------------------------------------------------------------------------
+"""
+
 count, prometheus_ips = split_prome_ips(sys.argv[1])
 print(prometheus_ips, count)
 
 prometheus_ip = find_alive_prome(prometheus_ips)
+
 # check if all prometheus are down
 if not prometheus_ip:
     print("metric=TiDB.prometheus.Prometheus_is_down|value=1|type=gauge|tags=status:critical")
