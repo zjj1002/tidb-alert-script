@@ -107,12 +107,8 @@ Grafana_metrics = {
     },
 }
 
-# Prometheus
-Prometheus_metrics = {
-    'TiDB.prometheus.Prometheus_is_down': {
-        'warning_level': 'critical',
-        'pql': 'probe_success{}',
-    }
+# Cluster_metrics
+Cluster_metrics = {
 }
 
 """
@@ -248,6 +244,7 @@ def run_script():
                 print("metric=TiDB.prometheus.Prometheus_is_down|value=1|type=gauge|tags=status:critical")
             else:
                 print("metric=TiDB.prometheus.Prometheus_is_down|value=0|type=gauge|tags=status:critical")
+                check_role_metrics(Cluster_metrics, prometheus_address)
 
     active_prometheus_address = find_alive_prome(prometheus_addresses)
 
