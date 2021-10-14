@@ -212,7 +212,7 @@ cluster_metrics = {
     # Phase 2
     'TiDB.cluster.PD_cluster_down_tikv_nums': {
         'warning_level': 'emergency',
-        'pql': '( pd_cluster_status{type="store_down_count"} ) by (instance) > 0) '
+        'pql': '(sum(pd_cluster_status{type="store_down_count"}) by (instance) > 0) '
                'and (sum(etcd_server_is_leader) by (instance) > 0)',
     },
     'TiDB.cluster.PD_cluster_lost_connect_tikv_nums': {
