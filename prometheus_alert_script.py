@@ -157,7 +157,7 @@ tiflash_metrics = {
     },
     'TiDB.tiflash.TiFlash_proxy_node_restart': {
         'warning_level': 'critical',
-        'pql': 'changes(process_start_time_seconds{job="tiflash",instance=~"%s.*"}[5m])> 0' % self_ip
+        'pql': 'changes(tiflash_proxy_process_start_time_seconds{job="tiflash",instance=~"%s.*"}[5m]) > 0' % self_ip
     },
 
     # Phase 2
