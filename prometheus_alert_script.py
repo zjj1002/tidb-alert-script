@@ -153,7 +153,7 @@ tiflash_metrics = {
     # Phase 1
     'TiDB.tiflash.TiFlash_server_is_down': {
         'warning_level': 'critical',
-        'pql': 'probe_success{group="tikv",instance=~"%s.*"} == 0' % self_ip
+        'pql': 'probe_success{group="tiflash",instance=~"%s.*"} == 0' % self_ip
     },
     'TiDB.tiflash.TiFlash_proxy_node_restart': {
         'warning_level': 'critical',
