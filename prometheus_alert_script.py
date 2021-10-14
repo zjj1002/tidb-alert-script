@@ -24,9 +24,9 @@ Modify this block to add more metrics to monitor
 """
 
 # PD
-# Alert rules under the PD Node
-PD_metrics = {
-    'TiDB.blacker.PD_server_is_down': {
+pd_metrics = {
+    # Phase 1
+    'TiDB.pd.PD_server_is_down': {
         'warning_level': 'critical',
         'pql': 'probe_success{group="pd",instance=~"%s.*"} == 0' % self_ip
     },
@@ -37,9 +37,9 @@ PD_metrics = {
 }
 
 # TiDB
-# Alert rules under the TiDB Node
-TiDB_metrics = {
-    'TiDB.blacker.TiDB_server_is_down': {
+tidb_metrics = {
+    # phase 1
+    'TiDB.tidb.TiDB_server_is_down': {
         'warning_level': 'critical',
         'pql': 'probe_success{group="tidb",instance=~"%s.*"} == 0' % self_ip
     },
@@ -47,12 +47,34 @@ TiDB_metrics = {
         'warning_level': 'critical',
         'pql': 'changes(process_start_time_seconds{job="tidb",instance=~"%s.*"}[5m])> 0' % self_ip
     },
+
+    # Phase 2
+    'TiDB.tidb.TiDB_schema_error': {
+        'warning_level': 'emergency',
+        'pql': 'increase(tidb_session_schema_lease_error_total{type="outdated",instance=~"%s.*"}[5m])> 0' % self_ip
+    },
+    'TiDB.tidb.TiDB_monitor_keep_alive': {
+        'warning_level': 'emergency',
+        'pql': 'increase(tidb_monitor_keep_alive_total{job="tidb",instance=~"%s.*"}[10m]) < 100' % self_ip
+    },
+    'TiDB.tidb.TiDB_monitor_time_jump_back_error': {
+        'warning_level': 'warning',
+        'pql': 'increase(tidb_monitor_time_jump_back_total{instance=~"%s.*"}[10m])  > 0' % self_ip
+    },
+    'TiDB.tidb.TiDB_ddl_waiting_jobs': {
+        'warning_level': 'warning',
+        'pql': 'sum(tidb_ddl_waiting_jobs{instance=~"%s.*"}) > 5' % self_ip
+    },
+    'TiDB.tidb.TiDB_server_panic_total': {
+        'warning_level': 'critical',
+        'pql': 'increase(tidb_server_panic_total{instance=~"%s.*"}[10m]) > 0' % self_ip
+    },
 }
 
 # TiKV
-# Alert rules under the TiKV Node
-TiKV_metrics = {
-    'TiDB.blacker.TiKV_server_is_down': {
+tikv_metrics = {
+    # Phase 1
+    'TiDB.tikv.TiKV_server_is_down': {
         'warning_level': 'critical',
         'pql': 'probe_success{group="tikv",instance=~"%s.*"} == 0' % self_ip
     },
@@ -65,12 +87,71 @@ TiKV_metrics = {
         'pql': 'increase(tikv_gcworker_gc_tasks_vec{task="gc",instance=~"%s.*"}[1d]) < 1 and increase('
                'tikv_gc_compaction_filter_perform{instance=~"%s.*"}[1d]) < 1' % (self_ip, self_ip)
     },
+
+    # Phase 2
+    'TiDB.tikv.TiKV_coprocessor_request_error': {
+        'warning_level': 'warning',
+        'pql': 'increase(tikv_coprocessor_request_error{reason!="lock", instance=~"%s.*"}[10m]) > 100' % self_ip
+    },
+    'TiDB.tikv.TiKV_raft_append_log_duration_secs': {
+        'warning_level': 'critical',
+        'pql': 'histogram_quantile(0.99, sum(rate(tikv_raftstore_append_log_duration_seconds_bucket{'
+               'instance=~"%s.*"}[1m])) by (le, instance)) > 1' % self_ip
+    },
+    'TiDB.tikv.TiKV_raftstore_thread_cpu_seconds_total': {
+        'warning_level': 'critical',
+        'pql': 'sum(rate(tikv_thread_cpu_seconds_total{name=~"raftstore_.*", instance=~"%s.*"}[1m])) '
+               'by (instance)  > 1.6 ' % self_ip
+    },
+    'TiDB.tikv.TiKV_thread_apply_worker_cpu_seconds': {
+        'warning_level': 'critical',
+        'pql': 'sum(rate(tikv_thread_cpu_seconds_total{name="apply_worker", instance=~"%s.*"}[1m])) '
+               'by (instance) > 1.8' % self_ip
+    },
+    'TiDB.tikv.TiKV_approximate_region_size': {
+        'warning_level': 'warning',
+        'pql': 'histogram_quantile(0.99, sum(rate(tikv_raftstore_region_size_bucket{instance=~"%s.*"}[1m])) '
+               'by (le)) > 1073741824' % self_ip
+    },
+    'TiDB.tikv.TiKV_async_request_write_duration_seconds': {
+        'warning_level': 'critical',
+        'pql': 'histogram_quantile(0.99, sum(rate(tikv_storage_engine_async_request_duration_seconds_bucket'
+               '{type="write", instance=~"%s.*"}[1m])) by (le, instance, type)) > 1' % self_ip
+    },
+    'TiDB.tikv.TiKV_coprocessor_pending_request': {
+        'warning_level': 'warning',
+        'pql': 'delta('
+               'tikv_coprocessor_pending_request{instance=~"%s.*"}[10m]) > 5000' % self_ip
+    },
+    'TiDB.tikv.TiKV_raft_apply_log_duration_secs': {
+        'warning_level': 'critical',
+        'pql': 'histogram_quantile(0.99, sum(rate('
+               'tikv_raftstore_apply_log_duration_seconds_bucket{instance=~"%s.*"}[1m]))'
+               ' by (le, instance)) > 1' % self_ip
+    },
+    'TiDB.tikv.TiKV_scheduler_command_duration_seconds': {
+        'warning_level': 'warning',
+        'pql': 'histogram_quantile(0.99, sum(rate('
+               'tikv_scheduler_command_duration_seconds_bucket{instance=~"%s.*"}[1m]))'
+               ' by (le, instance, type)  / 1000)  > 1' % self_ip
+    },
+    'TiDB.tikv.TiKV_scheduler_latch_wait_duration_seconds': {
+        'warning_level': 'critical',
+        'pql': 'histogram_quantile(0.99, sum(rate('
+               'tikv_scheduler_latch_wait_duration_seconds_bucket{instance=~"%s.*"}[1m]))'
+               ' by (le, instance, type))  > 1' % self_ip
+    },
+    'TiDB.tikv.TiKV_write_stall': {
+        'warning_level': 'critical',
+        'pql': 'delta('
+               'tikv_engine_write_stall{instance=~"%s.*"}[10m]) > 0' % self_ip
+    },
 }
 
 # TiFlash
-# Alert rules under the TiFlash Node
-TiFlash_metrics = {
-    'TiDB.blacker.TiFlash_server_is_down': {
+tiflash_metrics = {
+    # Phase 1
+    'TiDB.tiflash.TiFlash_server_is_down': {
         'warning_level': 'critical',
         'pql': 'probe_success{group="tikv",instance=~"%s.*"} == 0' % self_ip
     },
@@ -78,47 +159,109 @@ TiFlash_metrics = {
         'warning_level': 'critical',
         'pql': 'changes(process_start_time_seconds{job="tiflash",instance=~"%s.*"}[5m])> 0' % self_ip
     },
+
+    # Phase 2
+    'TiDB.tiflash.TiFlash_schema_error': {
+        'warning_level': 'emergency',
+        'pql': 'increase(tiflash_schema_apply_count{type="failed", instance=~"%s.*"}[15m]) > 0' % self_ip
+    }
 }
 
 # Blackbox Exporter
-# Alert rules under the Blackbox_exporter Node
-Blacker_metrics = {
-    'TiDB.blacker.Blackbox_exporter_server_is_down': {
+blackbox_exporter_metrics = {
+    # Phase 1
+    'TiDB.blackbox_exporter.Blackbox_exporter_server_is_down': {
         'warning_level': 'critical',
         'pql': 'probe_success{group="blackbox_exporter",instance=~"%s.*"} == 0' % self_ip
     },
+
+    # Phase 2
+    'TiDB.blackbox_exporter.BLACKER_ping_latency_more_than_1s': {
+        'warning_level': 'warning',
+        'pql': 'max_over_time(probe_duration_seconds'
+               '{job=~"blackbox_exporter.*_icmp", instance=~"%s.*"}[1m]) > 1' % self_ip
+    }
 }
 
 # Node Exporter
-# Alert rules under the Blackbox_exporter Node
-Node_exporter_metrics = {
-    'TiDB.blacker.Node_exporter_server_is_down': {
+node_exporter_metrics = {
+    # Phase 1
+    'TiDB.node_exporter.Node_exporter_server_is_down': {
         'warning_level': 'critical',
         'pql': 'probe_success{group="node_exporter",instance=~"%s.*"} == 0' % self_ip
+    },
+
+    # Phase 2
+    'TiDB.node_exporter.Node_exporter_node_restart': {
+        'warning_level': 'warning',
+        'pql': 'changes(process_start_time_seconds{job="overwritten-nodes", instance=~"%s.*"}[5m]) > 0' % self_ip
     },
 }
 
 # Grafana
-# Alert rules under the Grafana node
-Grafana_metrics = {
-    'TiDB.blacker.Grafana_server_is_down': {
+grafana_metrics = {
+    # Phase 1
+    'TiDB.grafana.Grafana_server_is_down': {
         'warning_level': 'critical',
         'pql': 'probe_success{group="grafana",instance=~"%s.*"} == 0' % self_ip
     },
 }
 
 # Cluster_metrics
-Cluster_metrics = {
-}
+cluster_metrics = {
+    # Phase 2
+    'TiDB.cluster.PD_cluster_down_tikv_nums': {
+        'warning_level': 'emergency',
+        'pql': '( pd_cluster_status{type="store_down_count"} ) by (instance) > 0) '
+               'and (sum(etcd_server_is_leader) by (instance) > 0)',
+    },
+    'TiDB.cluster.PD_cluster_lost_connect_tikv_nums': {
+        'warning_level': 'warning',
+        'pql': '(sum ( pd_cluster_status{type="store_disconnected_count"} ) by (instance) > 0) '
+               'and (sum(etcd_server_is_leader) by (instance) > 0)',
+    },
+    'TiDB.cluster.PD_leader_change': {
+        'warning_level': 'warning',
+        'pql': 'count(changes(pd_server_tso{type="save"}[10m]) > 0) >= 2',
+    },
+    'TiDB.cluster.TiKV_space_used_more_than_80%': {
+        'warning_level': 'warning',
+        'pql': 'sum(pd_cluster_status{type="storage_size"}) '
+               '/sum(pd_cluster_status{type="storage_capacity"}) * 100  > 80',
+    },
+    'TiDB.cluster.PD_miss_peer_region_count': {
+        'warning_level': 'warning',
+        'pql': '(sum(pd_regions_status{type="miss_peer_region_count"}) by (instance)  > 100) '
+               'and (sum(etcd_server_is_leader) by (instance) > 0)',
+    },
+    'TiDB.cluster.PD_no_store_for_making_replica': {
+        'warning_level': 'warning',
+        'pql': 'increase(pd_checker_event_count{type="replica_checker", name="no_target_store"}[1m]) > 0',
+    },
+    'TiDB.cluster.PD_system_time_slow': {
+        'warning_level': 'warning',
+        'pql': 'changes(pd_server_tso{type="system_time_slow"}[10m]) >= 1',
+    },
+    'TiDB.cluster.PD_cluster_low_space': {
+        'warning_level': 'warning',
+        'pql': '(sum ( pd_cluster_status{type="store_low_space_count"} ) by (instance) > 0) '
+               'and (sum(etcd_server_is_leader) by (instance) > 0)',
+    },
+    'TiDB.cluster.PD_down_peer_region_nums': {
+        'warning_level': 'warning',
+        'pql': '(sum(pd_regions_status{type="down_peer_region_count"}) by (instance)  > 10) '
+               'and (sum(etcd_server_is_leader) by (instance) > 0)',
+    },
 
-"""
---------------------------------------------------------------------------
-functions to be used by script
---------------------------------------------------------------------------
-"""
-
+    """
+    --------------------------------------------------------------------------
+    functions to be used by script
+    --------------------------------------------------------------------------
+    """
 
 # split the input prometheus addresses by ","
+
+
 def split_prome_addresses(addresses):
     number_of_addresses = len(addresses.split(","))
     prometheus_addresses = addresses.split(",")
@@ -176,25 +319,25 @@ def populate_tasks(prometheus_address):
     return_tasks = []
 
     if has_response(prometheus_address, judge_pqls['tidb']):
-        return_tasks.append(TiDB_metrics)
+        return_tasks.append(tidb_metrics)
 
     if has_response(prometheus_address, judge_pqls['tikv']):
-        return_tasks.append(TiKV_metrics)
+        return_tasks.append(tikv_metrics)
 
     if has_response(prometheus_address, judge_pqls['tiflash']):
-        return_tasks.append(TiFlash_metrics)
+        return_tasks.append(tiflash_metrics)
 
     if has_response(prometheus_address, judge_pqls['pd']):
-        return_tasks.append(PD_metrics)
+        return_tasks.append(pd_metrics)
 
     if has_response(prometheus_address, judge_pqls['blackbox_exporter']):
-        return_tasks.append(Blacker_metrics)
+        return_tasks.append(blackbox_exporter_metrics)
 
     if has_response(prometheus_address, judge_pqls['node_exporter']):
-        return_tasks.append(Node_exporter_metrics)
+        return_tasks.append(node_exporter_metrics)
 
     if has_response(prometheus_address, judge_pqls['grafana']):
-        return_tasks.append(Grafana_metrics)
+        return_tasks.append(grafana_metrics)
 
     return return_tasks
 
@@ -244,7 +387,7 @@ def run_script():
                 print("metric=TiDB.prometheus.Prometheus_is_down|value=1|type=gauge|tags=status:critical")
             else:
                 print("metric=TiDB.prometheus.Prometheus_is_down|value=0|type=gauge|tags=status:critical")
-                check_role_metrics(Cluster_metrics, prometheus_address)
+                check_role_metrics(cluster_metrics, prometheus_address)
 
     active_prometheus_address = find_alive_prome(prometheus_addresses)
 
