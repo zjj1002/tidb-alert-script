@@ -252,12 +252,14 @@ cluster_metrics = {
         'pql': '(sum(pd_regions_status{type="down_peer_region_count"}) by (instance)  > 10) '
                'and (sum(etcd_server_is_leader) by (instance) > 0)',
     },
+}
 
-    """
-    --------------------------------------------------------------------------
-    functions to be used by script
-    --------------------------------------------------------------------------
-    """
+"""
+--------------------------------------------------------------------------
+functions to be used by script
+--------------------------------------------------------------------------
+"""
+
 
 # split the input prometheus addresses by ","
 
