@@ -101,12 +101,12 @@ tikv_metrics = {
     'TiDB.tikv.TiKV_raftstore_thread_cpu_seconds_total': {
         'warning_level': 'critical',
         'pql': 'sum(rate(tikv_thread_cpu_seconds_total{name=~"raftstore_.*", instance=~"%s.*"}[1m])) '
-               'by (instance)  > 1.6 ' % self_ip
+               'by (instance)  > 3' % self_ip
     },
     'TiDB.tikv.TiKV_thread_apply_worker_cpu_seconds': {
         'warning_level': 'critical',
         'pql': 'sum(rate(tikv_thread_cpu_seconds_total{name="apply_worker", instance=~"%s.*"}[1m])) '
-               'by (instance) > 1.8' % self_ip
+               'by (instance) > 3' % self_ip
     },
     'TiDB.tikv.TiKV_approximate_region_size': {
         'warning_level': 'warning',
