@@ -380,7 +380,8 @@ note that self ip is obtained at the beginning of the script
 
 
 def run_script():
-    count, prometheus_addresses = split_prome_addresses(sys.argv[1])
+    # prometheus_addresses_string should be injected by outside program
+    count, prometheus_addresses = split_prome_addresses(prometheus_addresses_string)
     print(prometheus_addresses, count)
 
     for prometheus_address in prometheus_addresses:
