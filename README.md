@@ -16,17 +16,60 @@
 * 4.  两个Pormetheus 一个down了 另外一个活着 如何报警
 * 5.  blackbox里的probe_sucess group里没有Prometheus 探活如何实现
 
-## Phase 1 完成的报警
-* Prometheus is down
-* TiDB server is down
-* TiDB node restart
-* TiKV server is down
-* TiKV node restart
-* TiKV GC cannot work
-* TiFlash server is down
-* TiFlash proxy node restart
-* PD server is down
-* PD node restart
-* Backbox exporter server is down
-* Node exporter server is down
-* Grafana server is down
+## 已完成的报警信息
+
+### 报警名称命名规律
+
+`[产品名].[组件名].[警告名]`
+
+示例: `TiDB.pd.PD_server_is_down`
+
+## 一，二期已完成的报警
+
+| Phase | Component         | Alert Name                                               |
+| ----- | ----------------- | -------------------------------------------------------- |
+| 1     | pd                | TiDB.pd.PD_server_is_down                                |
+| 1     | pd                | TiDB.pd.PD_node_restart                                  |
+| 1     | tidb              | TiDB.tidb.TiDB_server_is_down                            |
+| 1     | tidb              | TiDB.tidb.TiDB_node_restart                              |
+| 2     | tidb              | TiDB.tidb.TiDB_schema_error                              |
+| 2     | tidb              | TiDB.tidb.TiDB_monitor_keep_alive                        |
+| 2     | tidb              | TiDB.tidb.TiDB_monitor_time_jump_back_error              |
+| 2     | tidb              | TiDB.tidb.TiDB_ddl_waiting_jobs                          |
+| 2     | tidb              | TiDB.tidb.TiDB_server_panic_total                        |
+| 1     | tikv              | TiDB.tikv.TiKV_server_is_down                            |
+| 1     | tikv              | TiDB.tikv.TiKV_node_restart                              |
+| 1     | tikv              | TiDB.tikv.TiKV_GC_can_not_work                           |
+| 2     | tikv              | TiDB.tikv.TiKV_coprocessor_request_error                 |
+| 2     | tikv              | TiDB.tikv.TiKV_raft_append_log_duration_secs             |
+| 2     | tikv              | TiDB.tikv.TiKV_raftstore_thread_cpu_seconds_total        |
+| 2     | tikv              | TiDB.tikv.TiKV_thread_apply_worker_cpu_seconds           |
+| 2     | tikv              | TiDB.tikv.TiKV_approximate_region_size                   |
+| 2     | tikv              | TiDB.tikv.TiKV_async_request_write_duration_seconds      |
+| 2     | tikv              | TiDB.tikv.TiKV_coprocessor_pending_request               |
+| 2     | tikv              | TiDB.tikv.TiKV_raft_apply_log_duration_secs              |
+| 2     | tikv              | TiDB.tikv.TiKV_scheduler_command_duration_seconds        |
+| 2     | tikv              | TiDB.tikv.TiKV_scheduler_latch_wait_duration_seconds     |
+| 2     | tikv              | TiDB.tikv.TiKV_write_stall                               |
+| 1     | tiflash           | TiDB.tiflash.TiFlash_server_is_down                      |
+| 1     | tiflash           | TiDB.tiflash.TiFlash_proxy_node_restart                  |
+| 2     | tiflash           | TiDB.tiflash.TiFlash_schema_error                        |
+| 1     | blackbox_exporter | TiDB.blackbox_exporter.Blackbox_exporter_server_is_down  |
+| 2     | blackbox_exporter | TiDB.blackbox_exporter.BLACKER_ping_latency_more_than_1s |
+| 1     | node_exporter     | TiDB.node_exporter.Node_exporter_server_is_down          |
+| 2     | node_exporter     | TiDB.node_exporter.Node_exporter_node_restart            |
+| 1     | grafana           | TiDB.grafana.Grafana_server_is_down                      |
+| 2     | cluster           | TiDB.prometheus.Prometheus_is_down                       |
+| 2     | cluster           | TiDB.cluster.PD_cluster_down_tikv_nums                   |
+| 2     | cluster           | TiDB.cluster.PD_cluster_lost_connect_tikv_nums           |
+| 2     | cluster           | TiDB.cluster.PD_leader_change                            |
+| 2     | cluster           | TiDB.cluster.TiKV_space_used_more_than_80                |
+| 2     | cluster           | TiDB.cluster.PD_miss_peer_region_count                   |
+| 2     | cluster           | TiDB.cluster.PD_no_store_for_making_replica              |
+| 2     | cluster           | TiDB.cluster.PD_system_time_slow                         |
+| 2     | cluster           | TiDB.cluster.PD_cluster_low_space                        |
+| 2     | cluster           | TiDB.cluster.PD_down_peer_region_nums                    |
+
+共41个，其中：
+* 1期报警: 12个
+* 2期报警: 29个
