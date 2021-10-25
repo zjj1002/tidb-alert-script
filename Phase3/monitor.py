@@ -17,26 +17,30 @@ tasks = {
     # Phase 1
     'TiDB.blackbox_exporter.Blackbox_exporter_server_is_down': {
         'warning_level': 'critical',
-        'pql': 'probe_success{group="blackbox_exporter",instance=~"%s.*"} == 0' % self_ip
+        'pql': 'probe_success{group="blackbox_exporter",instance=~"%s.*"} == 0' % self_ip,
+        'is_value': False
     },
 
     # Phase 2
     'TiDB.blackbox_exporter.BLACKER_ping_latency_more_than_1s': {
         'warning_level': 'warning',
         'pql': 'max_over_time(probe_duration_seconds'
-               '{job=~"blackbox_exporter.*_icmp", instance=~"%s.*"}[1m]) > 1' % self_ip
+               '{job=~"blackbox_exporter.*_icmp", instance=~"%s.*"}[1m]) > 1' % self_ip,
+        'is_value': False
     },
     # Node Exporter
     # Phase 1
     'TiDB.node_exporter.Node_exporter_server_is_down': {
         'warning_level': 'critical',
-        'pql': 'probe_success{group="node_exporter",instance=~"%s.*"} == 0' % self_ip
+        'pql': 'probe_success{group="node_exporter",instance=~"%s.*"} == 0' % self_ip,
+        'is_value': False
     },
 
     # Phase 2
     'TiDB.node_exporter.Node_exporter_node_restart': {
         'warning_level': 'warning',
-        'pql': 'changes(process_start_time_seconds{job="overwritten-nodes", instance=~"%s.*"}[5m]) > 0' % self_ip
+        'pql': 'changes(process_start_time_seconds{job="overwritten-nodes", instance=~"%s.*"}[5m]) > 0' % self_ip,
+        'is_value': False
     },
 }
 

@@ -16,17 +16,20 @@ tasks = {
     # Phase 1
     'TiDB.tiflash.TiFlash_server_is_down': {
         'warning_level': 'critical',
-        'pql': 'probe_success{group="tiflash",instance=~"%s.*"} == 0' % self_ip
+        'pql': 'probe_success{group="tiflash",instance=~"%s.*"} == 0' % self_ip,
+        'is_value': False
     },
     'TiDB.tiflash.TiFlash_proxy_node_restart': {
         'warning_level': 'critical',
-        'pql': 'changes(tiflash_proxy_process_start_time_seconds{job="tiflash",instance=~"%s.*"}[5m]) > 0' % self_ip
+        'pql': 'changes(tiflash_proxy_process_start_time_seconds{job="tiflash",instance=~"%s.*"}[5m]) > 0' % self_ip,
+        'is_value': False
     },
 
     # Phase 2
     'TiDB.tiflash.TiFlash_schema_error': {
         'warning_level': 'emergency',
-        'pql': 'increase(tiflash_schema_apply_count{type="failed", instance=~"%s.*"}[15m]) > 0' % self_ip
+        'pql': 'increase(tiflash_schema_apply_count{type="failed", instance=~"%s.*"}[15m]) > 0' % self_ip,
+        'is_value': False
     }
 }
 

@@ -16,11 +16,13 @@ tasks = {
     # Phase 1
     'TiDB.pd.PD_server_is_down': {
         'warning_level': 'critical',
-        'pql': 'probe_success{group="pd",instance=~"%s.*"} == 0' % self_ip
+        'pql': 'probe_success{group="pd",instance=~"%s.*"} == 0' % self_ip,
+        'is_value': False
     },
     'TiDB.pd.PD_node_restart': {
         'warning_level': 'critical',
-        'pql': 'changes(process_start_time_seconds{job="pd",instance=~"%s.*"}[5m])> 0' % self_ip
+        'pql': 'changes(process_start_time_seconds{job="pd",instance=~"%s.*"}[5m])> 0' % self_ip,
+        'is_value': False
     },
 }
 

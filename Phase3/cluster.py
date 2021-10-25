@@ -18,43 +18,52 @@ tasks = {
         'warning_level': 'emergency',
         'pql': '(sum(pd_cluster_status{type="store_down_count"}) by (instance) > 0) '
                'and (sum(etcd_server_is_leader) by (instance) > 0)',
+        'is_value': False
     },
     'TiDB.cluster.PD_cluster_lost_connect_tikv_nums': {
         'warning_level': 'warning',
         'pql': '(sum ( pd_cluster_status{type="store_disconnected_count"} ) by (instance) > 0) '
                'and (sum(etcd_server_is_leader) by (instance) > 0)',
+        'is_value': False
     },
     'TiDB.cluster.PD_leader_change': {
         'warning_level': 'warning',
         'pql': 'count(changes(pd_server_tso{type="save"}[10m]) > 0) >= 2',
+        'is_value': False
     },
     'TiDB.cluster.TiKV_space_used_more_than_80%': {
         'warning_level': 'warning',
         'pql': 'sum(pd_cluster_status{type="storage_size"}) '
-               '/sum(pd_cluster_status{type="storage_capacity"}) * 100  > 80',
+               '/sum(pd_cluster_status{type="storage_capacity"}) * 100',
+        'is_value': True
     },
     'TiDB.cluster.PD_miss_peer_region_count': {
         'warning_level': 'warning',
         'pql': '(sum(pd_regions_status{type="miss_peer_region_count"}) by (instance)  > 100) '
                'and (sum(etcd_server_is_leader) by (instance) > 0)',
+        'is_value': False
     },
     'TiDB.cluster.PD_no_store_for_making_replica': {
         'warning_level': 'warning',
         'pql': 'increase(pd_checker_event_count{type="replica_checker", name="no_target_store"}[1m]) > 0',
+        'is_value': False
     },
     'TiDB.cluster.PD_system_time_slow': {
         'warning_level': 'warning',
         'pql': 'changes(pd_server_tso{type="system_time_slow"}[10m]) >= 1',
+        'is_value': False
     },
     'TiDB.cluster.PD_cluster_low_space': {
         'warning_level': 'warning',
         'pql': '(sum ( pd_cluster_status{type="store_low_space_count"} ) by (instance) > 0) '
                'and (sum(etcd_server_is_leader) by (instance) > 0)',
+        'is_value': False
     },
     'TiDB.cluster.PD_down_peer_region_nums': {
         'warning_level': 'warning',
         'pql': '(sum(pd_regions_status{type="down_peer_region_count"}) by (instance)  > 10) '
                'and (sum(etcd_server_is_leader) by (instance) > 0)',
+        'is_value': False
     },
 }
 

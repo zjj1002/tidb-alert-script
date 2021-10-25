@@ -16,33 +16,40 @@ tasks = {
     # phase 1
     'TiDB.tidb.TiDB_server_is_down': {
         'warning_level': 'critical',
-        'pql': 'probe_success{group="tidb",instance=~"%s.*"} == 0' % self_ip
+        'pql': 'probe_success{group="tidb",instance=~"%s.*"} == 0' % self_ip,
+        'is_value': False
     },
     'TiDB.tidb.TiDB_node_restart': {
         'warning_level': 'critical',
-        'pql': 'changes(process_start_time_seconds{job="tidb",instance=~"%s.*"}[5m])> 0' % self_ip
+        'pql': 'changes(process_start_time_seconds{job="tidb",instance=~"%s.*"}[5m])> 0' % self_ip,
+        'is_value': False
     },
 
     # Phase 2
     'TiDB.tidb.TiDB_schema_error': {
         'warning_level': 'emergency',
-        'pql': 'increase(tidb_session_schema_lease_error_total{type="outdated",instance=~"%s.*"}[5m])> 0' % self_ip
+        'pql': 'increase(tidb_session_schema_lease_error_total{type="outdated",instance=~"%s.*"}[5m])> 0' % self_ip,
+        'is_value': False
     },
     'TiDB.tidb.TiDB_monitor_keep_alive': {
         'warning_level': 'emergency',
-        'pql': 'increase(tidb_monitor_keep_alive_total{job="tidb",instance=~"%s.*"}[10m]) < 100' % self_ip
+        'pql': 'increase(tidb_monitor_keep_alive_total{job="tidb",instance=~"%s.*"}[10m]) < 100' % self_ip,
+        'is_value': False
     },
     'TiDB.tidb.TiDB_monitor_time_jump_back_error': {
         'warning_level': 'warning',
-        'pql': 'increase(tidb_monitor_time_jump_back_total{instance=~"%s.*"}[10m])  > 0' % self_ip
+        'pql': 'increase(tidb_monitor_time_jump_back_total{instance=~"%s.*"}[10m])  > 0' % self_ip,
+        'is_value': False
     },
     'TiDB.tidb.TiDB_ddl_waiting_jobs': {
         'warning_level': 'warning',
-        'pql': 'sum(tidb_ddl_waiting_jobs{instance=~"%s.*"}) > 5' % self_ip
+        'pql': 'sum(tidb_ddl_waiting_jobs{instance=~"%s.*"})' % self_ip,
+        'is_value': True
     },
     'TiDB.tidb.TiDB_server_panic_total': {
         'warning_level': 'critical',
-        'pql': 'increase(tidb_server_panic_total{instance=~"%s.*"}[10m]) > 0' % self_ip
+        'pql': 'increase(tidb_server_panic_total{instance=~"%s.*"}[10m]) > 0' % self_ip,
+        'is_value': False
     },
 }
 
