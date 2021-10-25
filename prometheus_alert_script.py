@@ -262,8 +262,6 @@ functions to be used by script
 
 
 # split the input prometheus addresses by ","
-
-
 def split_prome_addresses(addresses):
     number_of_addresses = len(addresses.split(","))
     prometheus_addresses = addresses.split(",")
