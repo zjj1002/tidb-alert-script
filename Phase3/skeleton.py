@@ -18,6 +18,12 @@ tasks = {
         'pql': 'sum(tidb_ddl_waiting_jobs{instance=~"%s.*"})' % self_ip,
         'is_value': True
     },
+    'TiDB.tikv.TiKV_raftstore_thread_cpu_seconds_total': {
+        'warning_level': 'critical',
+        'pql': 'sum(rate(tikv_thread_cpu_seconds_total{name=~"raftstore_.*", instance=~"%s.*"}[1m])) '
+               'by (instance)' % self_ip,
+        'is_value': True
+    },
 }
 
 
@@ -76,8 +82,10 @@ def find_alive_prome(prometheus_addresses):
 def check_metric(alert_name, prometheus_address, pql, warning_level, is_value):
     try:
         response = request_prome(prometheus_address, pql)
+        # if we are in value mode
         if is_value:
-            value = response.json()['data']['result']
+            result = response.json()['data']['result']
+            value = 0 if len(result) == 0 else result[0]['value'][1]
         else:
             value = 0 if response.json()['data']['result'] == [] else 1
         print("metric=%s|value=%s|type=gauge|tags=status:%s" % (alert_name, value, warning_level))
