@@ -13,10 +13,10 @@ def get_ip():
 self_ip = get_ip()
 
 tasks = {
-    'TiDB.tikv.TiKV_server_is_down': {
+    'TiDB.tidb.TiDB_ddl_waiting_jobs': {
         'warning_level': 'critical',
-        'pql': 'probe_success{group="tikv",instance=~"%s.*"} == 0' % self_ip,
-        'is_value': False
+        'pql': 'sum(tidb_ddl_waiting_jobs{instance=~"%s.*"})' % self_ip,
+        'is_value': True
     },
 }
 
