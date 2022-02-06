@@ -1,5 +1,5 @@
-# multi ping解决的问题
-- 从某台机器同时ping一个列表里的所有IP
+# network_monitor_multi_ping解决的问题
+- 从某台机器同时ping一个列表里的所有IP，来监控客户环境的网络丢包或者突发的大延迟的问题，0.4秒10个icmp包，每个包16字节的速度
 - 超过某个延迟的ping的结果会被记录
 - 可以并发N个gorutine去同时ping多台机器
 
