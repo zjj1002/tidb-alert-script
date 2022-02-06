@@ -1,3 +1,8 @@
+# multi ping解决的问题
+- 从某台机器同时ping一个列表里的所有IP
+- 超过某个延迟的ping的结果会被记录
+- 可以并发N个gorutine去同时ping多台机器
+
 # alert.go解决的问题
 - 链接TIDB的altermanager组件
 - 解析alertmanager的报警消息
