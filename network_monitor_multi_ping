@@ -1,0 +1,104 @@
+package main
+
+import (
+	"bufio"
+	"bytes"
+	"flag"
+	"fmt"
+	"io"
+	"os"
+	"os/exec"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+)
+
+var (
+	ipLengh      = int(4)
+	longDuration = float64(6)
+	product      = make(chan string, 40)
+	waitgroup    sync.WaitGroup
+	filePath     string
+)
+
+func getIps() []string {
+	var ipPool []string
+	fi, err := os.Open(filePath)
+	if err != nil {
+		fmt.Printf("can't find iplist.txt error:" + err.Error())
+		os.Exit(1)
+	}
+	defer fi.Close()
+	br := bufio.NewReader(fi)
+	for {
+		a, _, c := br.ReadLine()
+		if c == io.EOF {
+			break
+		}
+		line := string(a)
+		ipPool = append(ipPool, line)
+	}
+	return ipPool
+}
+
+func pingTest(tikvIp string) interface{} {
+	var buf strings.Builder
+	tag := 0
+	for {
+		timeFormat := "2006-01-02"
+		buf.WriteString("./" + time.Now().Format(timeFormat) + "-pingout.txt")
+		fName := buf.String()
+		logFile, err := os.OpenFile(fName, os.O_WRONLY|os.O_APPEND, 0666)
+		if err != nil {
+			logFile1, _ := os.OpenFile(fName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+			logFile.Close()
+			logFile = logFile1
+		}
+		buf.Reset()
+		outData, err := exec.Command("ping", "-s", "16", "-c", "10", "-i", "0.4", tikvIp).Output()
+		if err != nil {
+			fmt.Println(err)
+		}
+		for _, v := range bytes.Split(outData, []byte{'\n'}) {
+			line := string(v)
+			if strings.Contains(line, "icmp_seq") {
+				durationString := strings.Split(line, " ")[6]
+				durationValue, err := strconv.ParseFloat(strings.Split(durationString, "=")[1], 32)
+				if err != nil {
+					fmt.Println(err)
+				}
+				if durationValue > longDuration {
+					tag = 1
+					break
+				}
+			}
+		}
+		if tag == 1 {
+			logFile.WriteString(string(outData))
+			logFile.WriteString("--------------------------------------------------------------------------------------" + "\n")
+
+		}
+		tag = 0
+		outData = nil
+	}
+}
+
+func main() {
+	flag.IntVar(&ipLengh, "c", 32, "每台前端机并发PING的数量，默认32")
+	flag.Float64Var(&longDuration, "l", 0, "延迟大于多少MS才记录到日志，默认0")
+	flag.StringVar(&filePath, "p", "./iplist.txt", "iplist.txt文件路径,默认本地目录,注意，这个文本里只能存IP地址，不可以是域名，否则会有错误")
+	flag.Parse()
+	ip := getIps()
+	if ipLengh > len(ip) {
+		fmt.Printf("输入的并发数量大于前端机数量，请重新输入！\n")
+	}
+	for i := 0; i < ipLengh; i++ {
+		fmt.Println(ip[i])
+		waitgroup.Add(1)
+		//product <- ipMap[i]
+		go pingTest(ip[i])
+	}
+	waitgroup.Wait()
+	defer close(product)
+}
